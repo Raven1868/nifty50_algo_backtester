@@ -1,0 +1,83 @@
+# =========================================================
+# CONFIGURATION — NIFTY 50 Backtesting Engine
+# Change parameters here, never in source code.
+# =========================================================
+
+backtest:
+  start_date: "2019-01-01"
+  end_date: "2026-08-08"     # yfinance auto-caps to latest available session
+  initial_capital: 1000000   # INR
+  rebalance_freq: "W"        # "D", "W" (weekly), "M" (monthly)
+
+universe:
+  mode: "nifty50"            # "nifty50" or "custom"
+  custom_tickers: ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS"]
+
+strategy:
+  name: "moving_average"     # "mean_reversion" | "momentum" | "moving_average"
+  mean_reversion:
+    lookback: 20
+    entry_z: -1.5
+    exit_z: -0.3
+    allow_short: false
+    stop_loss_pct: 0.08
+    max_holding_days: 20
+  momentum:
+    lookback: 126             # ~6 trading months
+    top_n: 10
+    weighting: "equal"        # "equal" | "volatility"
+    skip_recent_days: 5       # skip most recent days (avoid short-term reversal contamination)
+  moving_average:
+    short_window: 20
+    long_window: 100
+    ma_type: "SMA"            # "SMA" or "EMA"
+
+execution:
+  transaction_cost_bps: 5      # brokerage + exchange charges, in basis points, one-way
+  stt_bps: 10                  # Securities Transaction Tax (delivery, one-way, illustrative)
+  stamp_duty_bps: 1.5
+  gst_pct_on_brokerage: 0.18
+  slippage_bps: 5
+  volume_aware_slippage: false  # true = scale slippage up for trades large vs avg daily volume
+  max_participation_rate: 0.10  # trade size as fraction of avg daily $ volume before slippage scales up
+
+position_sizing:
+  method: "equal_weight"       # "equal_weight" | "fixed_pct" | "volatility_target"
+  fixed_pct: 0.10
+  vol_lookback: 20
+  target_vol_annual: 0.15
+  max_position_size: 0.15
+  max_portfolio_exposure: 1.00
+  min_position_size: 0.0
+
+risk:
+  stop_loss_pct: null          # null = disabled, else e.g. 0.10
+  max_drawdown_limit: null     # null = disabled, else e.g. 0.25
+
+benchmark:
+  ticker: "^NSEI"               # NIFTY 50 index
+
+output:
+  reports_dir: "reports"
+  charts_dir: "charts"
+  cache_dir: "data/raw"
+  processed_dir: "data/processed"
+  logs_dir: "logs"
+
+validation:
+  train_window: 504          # ~2 years of sessions
+  test_window: 126           # ~6 months
+  step: 126
+  window_type: "rolling"     # "rolling" or "expanding"
+  objective: "sharpe"        # "sharpe" | "sortino" | "cagr" | "calmar"
+  param_grids:
+    moving_average:
+      short_window: [10, 20, 30, 40]
+      long_window: [50, 100, 150, 200]
+    mean_reversion:
+      lookback: [10, 20, 30]
+      entry_z: [-2.0, -1.5, -1.0]
+    momentum:
+      lookback: [63, 126, 189]
+      top_n: [5, 10, 15]
+
